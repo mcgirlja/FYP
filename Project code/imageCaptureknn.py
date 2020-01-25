@@ -12,7 +12,6 @@ class imageCapture(object):
         self.bookFound = False # this variable is set to True when a suitable book match has been found.
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
         self.matchedImage = None # used in orb method to use in show()
-        self.testVariable = None
 
     def captureImage(self):
         time.sleep(2.5)
