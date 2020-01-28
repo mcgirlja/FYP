@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import csv
 
 class imageCapture(object):
 
@@ -12,6 +13,7 @@ class imageCapture(object):
         self.bookFound = False # this variable is set to True when a suitable book match has been found.
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
         self.matchedImage = None # used in orb method to use in show()
+        self.avgMatches = 0 #used to set the threshold and return no book if it hasnt been met.
 
     def captureImage(self):
         time.sleep(2.5)
@@ -23,10 +25,10 @@ class imageCapture(object):
             ret = False
         img1 = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #this converts the colours to RGB from BGR
         self.queryImage = img1 #assigns this to be used for
-        #self.queryImage = cv2.imread(r'C:\pythonImg\OF-MICE-AND-MEN.jpg',0)
+        self.queryImage = cv2.imread(r'C:\pythonImg\HP-ORDER-OF-THE-PHOENIX.jpg',0)
 
 
-    def get_Matches_Orb(self): #at this point in time we are comparing it to a saved path image
+    def get_Matches_Orb(self):
 
 
         for image in self.storedImages:
@@ -38,7 +40,7 @@ class imageCapture(object):
             kp1, des1 = orb.detectAndCompute(self.queryImage,None) #this finds keypoints and descriptors with SIFT
             kp2, des2 = orb.detectAndCompute(storedImg,None)
 
-            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True) #create a bfMatcher object
+            #bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True) #create a bfMatcher object
             # matches = bf.match(des1,des2) #Match descriptors
             # matches = sorted(matches, key = lambda x:x.distance) #sorts them in order of their distance - lowest distance first.
 
@@ -49,7 +51,7 @@ class imageCapture(object):
             # Apply the ratio test
             good = []
             for m,n in matches:
-                if m.distance < 0.7 * n.distance:
+                if m.distance < 0.75 * n.distance:
                     good.append([m])
 
             if(len(self.matches) < len(good)):
@@ -57,18 +59,20 @@ class imageCapture(object):
                 self.matchedImage = storedImg
 
             print("curr="+str(len(good)))
+            self.avgMatches = self.avgMatches + len(good)
             print("best="+str(len(self.matches)))
 
-        if(len(self.matches) < 110):
-            print("No suitable match found")
+
+        avg = self.avgMatches / len(self.storedImages) #here i am trying to set a threshold to return the right book but when the wrong book is provided it will return nothing.
+        if(len(self.matches) * 0.70 < avg):
+            print("No suitable book found")
         else:
 
-
-        # img3 = cv2.drawMatches(self.queryImage,kp1,self.matchedImage,kp2,self.matches,None, flags=2) #helps us to draw the matches
-            img3 = cv2.drawMatchesKnn(self.queryImage,kp1,self.matchedImage,kp2,self.matches,None, flags=2)
+            # img3 = cv2.drawMatches(self.queryImage,kp1,self.matchedImage,kp2,self.matches,None, flags=2) #helps us to draw the matches
+            img3 = cv2.drawMatchesKnn(self.queryImage,kp1,self.matchedImage,kp2,self.matches, None, flags=2)
             plt.imshow(img3)
             plt.show()
-            self.bookFound = True #sets the variable true if a match has been foudn
+            self.bookFound = True #sets the variable true if a match has been found.
 
     def get_Matches_flann(self):
 
