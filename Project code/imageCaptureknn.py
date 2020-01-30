@@ -15,7 +15,6 @@ class imageCapture(object):
         self.matchedImage = None # used in orb method to use in show()
 
     def captureImage(self):
-        time.sleep(2.5)
         cap = cv2.VideoCapture(0)
         if cap.isOpened():
             ret, frame = cap.read()
@@ -24,18 +23,19 @@ class imageCapture(object):
             ret = False
         img1 = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #this converts the colours to RGB from BGR
         self.queryImage = img1 #assigned the captured image to be used be the following method.
+        #self.queryImage = 'C:\pythonImg\OF-MICE-AND-MEN.jpg'
+        return img1
 
-
-    def get_Matches_Orb(self):
-
+    def get_Matches_Orb(self,capturedImage):
 
         for image in self.storedImages:
             print(image)
             storedImg = cv2.imread(image,0)
 
             orb = cv2.ORB_create()
+            #orb = cv2.KAZE_create()
 
-            kp1, des1 = orb.detectAndCompute(self.queryImage,None) #this finds keypoints and descriptors with SIFT
+            kp1, des1 = orb.detectAndCompute(capturedImage, None) #this finds keypoints and descriptors with SIFT
             kp2, des2 = orb.detectAndCompute(storedImg,None)
 
             # BFMatcher with default params
@@ -51,35 +51,47 @@ class imageCapture(object):
             if(len(self.matches) < len(good)):
                 self.matches = good
                 self.matchedImage = storedImg
+                self.bestKP1 = kp1 # keypoints for the queryImage
+                self.bestKP2 = kp2 # keypoints for the best matched image/ one with highest number
+                if(len(self.matches) > 15): # set as a temporary threshold so it doesnt return matches with the ceiling.
+                    self.image = image
+                else:
+                    self.image = None
 
             print("curr="+str(len(good)))
             print("best="+str(len(self.matches)))
 
+        return(self.image)
 
-        img3 = cv2.drawMatchesKnn(self.queryImage,kp1,self.matchedImage,kp2,self.matches, None, flags=2)
-        plt.imshow(img3)
-        plt.show()
-        self.bookFound = True #sets the variable true if a match has been found.
+        # img3 = cv2.drawMatchesKnn(self.queryImage,self.bestKP1,self.matchedImage,self.bestKP2,self.matches, None, flags=2)
+        # plt.imshow(img3)
+        # plt.show()
+        # self.bookFound = True #sets the variable true if a match has been found.
 
-    def get_MatchedImage(self):
-        return self.matchedImage
 
     def bookLookup(self):
         counter = 0
-        image = None
-        if(counter < 5):
-            while True:
-                self.captureImage()
-                self.get_Matches_Orb()
-                if(image == None):
-                    image = self.matchedImage
-                    if()
-                if(image === self.matchedImage):
+        match_found = None
+        current_matching = None
+        while True:
+            captured_img = self.captureImage()
+            match_found = self.get_Matches_Orb(captured_img)
+            if(match_found != None):
+                if(current_matching == match_found):
                     counter += 1
-
-
-
+                else:
+                    current_matching = match_found
+                    counter = 0
+            if(counter >= 2):
+                self.read_Book(current_matching)
+                counter = 0
                 break
+
+
+    def read_Book(self, match):
+        print("IMAGE FOUND. IT IS = " + match)
+
+
 
 
 
@@ -87,6 +99,6 @@ class imageCapture(object):
 
 
 testobj = imageCapture()
+# testobj.captureImage()
+# testobj.get_Matches_Orb()
 testobj.bookLookup()
-#testobj.captureImage()
-#testobj.get_Matches_Orb()
