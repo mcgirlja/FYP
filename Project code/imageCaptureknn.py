@@ -32,7 +32,7 @@ class imageCapture(object):
 
     def get_matches_Kaze(self, capturedImage):
 
-        for image,des1 in self.storedImages2.items():
+        for image,des2 in self.storedImages2.items():
             print(image)
 
             storedImg = cv2.imread(image,0)
@@ -41,7 +41,6 @@ class imageCapture(object):
             orb = cv2.KAZE_create()
 
             kp1, des1 = orb.detectAndCompute(capturedImage, None) #this finds keypoints and descriptors with SIFT
-            kp2, des2 = orb.detectAndCompute(storedImg,None)
 
             # BFMatcher with default params
             bf = cv2.BFMatcher()
@@ -55,8 +54,6 @@ class imageCapture(object):
 
             if(len(self.matches) < len(good)):
                 self.matches = good
-                self.bestKP1 = kp1 # keypoints for the queryImage
-                self.bestKP2 = kp2 # keypoints for the best matched image/ one with highest number
                 if(len(self.matches) > 15): # set as a temporary threshold so it doesnt return matches with the ceiling.
                     self.image = image
                 else:
