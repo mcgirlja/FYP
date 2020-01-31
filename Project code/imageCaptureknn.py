@@ -2,17 +2,16 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-import csv
+import pickle
 
 class imageCapture(object):
 
 
     def __init__(self):
-        self.queryImage = None #image taken from the camera
-        self.storedImages = [r'C:\pythonImg\HP-ORDER-OF-THE-PHOENIX.jpg',r'C:\pythonImg\OF-MICE-AND-MEN.jpg',r'C:\pythonImg\OLIVER-TWIST.jpg',r'C:\pythonImg\TWILIGHT-BREAKING-DAWN.jpg']
-        self.bookFound = False # this variable is set to True when a suitable book match has been found.
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
-        self.matchedImage = None # used in orb method to use in show()
+        self.matchedImage = None #only used when using the show() method and drawing the matches for visual matches
+        self.storedImages2 = None
+
 
     def captureImage(self):
         cap = cv2.VideoCapture(0)
@@ -22,18 +21,24 @@ class imageCapture(object):
         else:
             ret = False
         img1 = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #this converts the colours to RGB from BGR
-        self.queryImage = img1 #assigned the captured image to be used be the following method.
-        #self.queryImage = 'C:\pythonImg\OF-MICE-AND-MEN.jpg'
         return img1
 
-    def get_Matches_Orb(self,capturedImage):
 
-        for image in self.storedImages:
+    def unpickle_database(self):
+        infile = open("dict.pickle","rb")
+        self.storedImages2 = pickle.load(infile)
+        infile.close()
+
+
+    def get_matches_Kaze(self, capturedImage):
+
+        for image,des1 in self.storedImages2.items():
             print(image)
+
             storedImg = cv2.imread(image,0)
 
-            orb = cv2.ORB_create()
-            #orb = cv2.KAZE_create()
+            #orb = cv2.ORB_create()
+            orb = cv2.KAZE_create()
 
             kp1, des1 = orb.detectAndCompute(capturedImage, None) #this finds keypoints and descriptors with SIFT
             kp2, des2 = orb.detectAndCompute(storedImg,None)
@@ -50,7 +55,6 @@ class imageCapture(object):
 
             if(len(self.matches) < len(good)):
                 self.matches = good
-                self.matchedImage = storedImg
                 self.bestKP1 = kp1 # keypoints for the queryImage
                 self.bestKP2 = kp2 # keypoints for the best matched image/ one with highest number
                 if(len(self.matches) > 15): # set as a temporary threshold so it doesnt return matches with the ceiling.
@@ -63,19 +67,17 @@ class imageCapture(object):
 
         return(self.image)
 
-        # img3 = cv2.drawMatchesKnn(self.queryImage,self.bestKP1,self.matchedImage,self.bestKP2,self.matches, None, flags=2)
-        # plt.imshow(img3)
-        # plt.show()
-        # self.bookFound = True #sets the variable true if a match has been found.
-
 
     def bookLookup(self):
         counter = 0
+        round = 0
         match_found = None
         current_matching = None
         while True:
+            round += 1
+            print("Round " + str(round))
             captured_img = self.captureImage()
-            match_found = self.get_Matches_Orb(captured_img)
+            match_found = self.get_matches_Kaze(captured_img)
             if(match_found != None):
                 if(current_matching == match_found):
                     counter += 1
@@ -85,6 +87,7 @@ class imageCapture(object):
             if(counter >= 2):
                 self.read_Book(current_matching)
                 counter = 0
+                round = 0
                 break
 
 
@@ -93,12 +96,9 @@ class imageCapture(object):
 
 
 
-
-
-
-
-
 testobj = imageCapture()
-# testobj.captureImage()
-# testobj.get_Matches_Orb()
+testobj.unpickle_database()
 testobj.bookLookup()
+#testobj.captureImage()
+#testobj.get_matches_Kaze()
+# testobj.get_Matches_Orb()
