@@ -13,12 +13,7 @@ class precomputeDatabase(object):
         storedImg = cv2.imread(image,0)
         orb = cv2.KAZE_create()
         kp2, des2 = orb.detectAndCompute(storedImg, None)
-        descriptors[image] = des2 
-
-    #
-    # for x,y in descriptors.items():
-    #     print(x,y)
-
+        descriptors[image] = des2
 
     pickle_out = open("dict.pickle","wb")
     pickle.dump(descriptors,pickle_out)

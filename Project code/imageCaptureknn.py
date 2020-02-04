@@ -34,18 +34,13 @@ class imageCapture(object):
 
         for image,des2 in self.storedImages2.items():
             print(image)
-
             storedImg = cv2.imread(image,0)
-
-            #orb = cv2.ORB_create()
             orb = cv2.KAZE_create()
-
+            #orb = cv2.KAZE_create()
             kp1, des1 = orb.detectAndCompute(capturedImage, None) #this finds keypoints and descriptors with SIFT
-
             # BFMatcher with default params
             bf = cv2.BFMatcher()
             matches = bf.knnMatch(des1,des2, k=2)
-
             # Apply the ratio test
             good = []
             for m,n in matches:
@@ -62,30 +57,33 @@ class imageCapture(object):
             print("curr="+str(len(good)))
             print("best="+str(len(self.matches)))
 
-        return(self.image)
+        good = []  # resets the matches for the constant loop once a match is found.
+        self.matches = [] # resets the matches for the constant loop once a match is found.
+        return(self.image) # returns the match as an image file path string.
 
 
     def bookLookup(self):
-        counter = 0
-        round = 0
-        match_found = None
-        current_matching = None
         while True:
-            round += 1
-            print("Round " + str(round))
-            captured_img = self.captureImage()
-            match_found = self.get_matches_Kaze(captured_img)
-            if(match_found != None):
-                if(current_matching == match_found):
-                    counter += 1
-                else:
-                    current_matching = match_found
+            counter = 0
+            round = 0
+            match_found = None
+            current_matching = None
+            while True:
+                round += 1
+                print("Round " + str(round))
+                captured_img = self.captureImage()
+                match_found = self.get_matches_Kaze(captured_img)
+                if(match_found != None):
+                    if(current_matching == match_found):
+                        counter += 1
+                    else:
+                        current_matching = match_found
+                        counter = 0
+                if(counter >= 1):
+                    self.read_Book(current_matching)
                     counter = 0
-            if(counter >= 2):
-                self.read_Book(current_matching)
-                counter = 0
-                round = 0
-                break
+                    round = 0
+                    break
 
 
     def read_Book(self, match):
