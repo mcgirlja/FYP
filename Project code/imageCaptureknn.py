@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import pickle
+import simpleaudio as sa
 
 class imageCapture(object):
 
@@ -88,6 +89,15 @@ class imageCapture(object):
 
     def read_Book(self, match):
         print("IMAGE FOUND. IT IS = " + match)
+        if(match == r'C:\pythonImg\ROMEO-AND-JULIET.jpg'):
+            wave_obj = sa.WaveObject.from_wave_file(r'C:\pythonAudio\romeo&juliet.wav')
+            play_obj = wave_obj.play()
+            print("The book is playing " + str(play_obj.is_playing()))
+            play_obj.wait_done()
+
+
+#might be failing because the loop is trying to carry on but the system is playing an audiobook
+#once above is figured out maybe try and store the image path and the audio path in a dictionary so that the above function can play the shown book.
 
 
 
