@@ -5,21 +5,24 @@ import time
 import pickle
 import simpleaudio as sa
 import sys
+import RPi.GPIO as GPIO
 
 class imageCapture(object):
 
 
     def __init__(self):
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(11,GPIO.OUT)
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
         # self.matchedImage = None #only used when using the show() method and drawing the matches for visual matches
         self.storedImageDes = None
         self.imagesWithAudio = {
 
-        r'C:\pythonImg\HP-ORDER-OF-THE-PHOENIX.jpg': r'temp.wav',
-        r'C:\pythonImg\OF-MICE-AND-MEN.jpg': r'temp2.wav',
-        r'C:\pythonImg\OLIVER-TWIST.jpg': r'temp3.wav',
-        r'C:\pythonImg\TWILIGHT-BREAKING-DAWN.jpg' : r'temp4.wav',
-        r'C:\pythonImg\ROMEO-AND-JULIET.jpg' : r'C:\pythonAudio\romeo&juliet.wav'
+        r'/home/pi/FYP/Image&Audio/HP-ORDER-OF-THE-PHOENIX.jpg': r'temp.wav',
+        r'/home/pi/FYP/Image&Audio/OF-MICE-AND-MEN.jpg': r'temp2.wav',
+        r'/home/pi/FYP/Image&Audio/OLIVER-TWIST.jpg' : r'temp3.wav',
+        r'/home/pi/FYP/Image&Audio/TWILIGHT-BREAKING-DAWN.jpg' : r'temp4.wav',
+        r'/home/pi/FYP/Image&Audio/ROMEO-AND-JULIET.jpg' : r'/home/pi/FYP/Image&Audio/ROMEO-AND-JULIET.wav'
         }
 
 
@@ -59,7 +62,7 @@ class imageCapture(object):
 
             if(len(self.matches) < len(good)):
                 self.matches = good
-                if(len(self.matches) > 15): # set as a temporary threshold so it doesnt return matches with the ceiling.
+                if(len(self.matches) > 20): # set as a temporary threshold so it doesnt return matches with the ceiling.
                     self.image = image
                 else:
                     self.image = None
@@ -105,23 +108,14 @@ class imageCapture(object):
                 print("Text " + str(y))
                 play_obj = wave_obj.play()
                 print("The book is playing " + str(play_obj.is_playing()))
+                GPIO.output(11,GPIO.HIGH)
+                time.sleep(2)
+                GPIO.output(11,GPIO.LOW)
                 # time.sleep(10)
                 # sys.exit('Script Terminated')
                 play_obj.wait_done()
             else:
                 continue
-
-        # if(match == r'C:\pythonImg\ROMEO-AND-JULIET.jpg'):
-        #     wave_obj = sa.WaveObject.from_wave_file(r'C:\pythonAudio\romeo&juliet.wav')
-        #     play_obj = wave_obj.play()
-        #     print("The book is playing " + str(play_obj.is_playing()))
-        #     # time.sleep(10)
-        #     # sys.exit('Script Terminated')
-        #     play_obj.wait_done()
-
-
-
-#once above is figured out maybe try and store the image path and the audio path in a dictionary so that the above function can play the shown book.
 
 
 
