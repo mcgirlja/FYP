@@ -13,6 +13,7 @@ class imageCapture(object):
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(11,GPIO.OUT)
+        GPIO.setup(12, GPIO.IN)
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
         # self.matchedImage = None #only used when using the show() method and drawing the matches for visual matches
         self.storedImageDes = None
@@ -105,14 +106,19 @@ class imageCapture(object):
         for x,y in self.imagesWithAudio.items(): # dictionary used to tie audio with an image and play the corresponding audio with the matched image path.
             if(match == x):
                 wave_obj = sa.WaveObject.from_wave_file(y)
-                print("Text " + str(y))
                 play_obj = wave_obj.play()
-                print("The book is playing " + str(play_obj.is_playing()))
                 GPIO.output(11,GPIO.HIGH)
-                time.sleep(2)
-                GPIO.output(11,GPIO.LOW)
-                # time.sleep(10)
-                # sys.exit('Script Terminated')
+
+                while play_obj.is_playing():
+                    input_value = GPIO.input(12)
+                    if input_value == False: #Detects if the button is pressed.
+                        print('Button has been pressed')
+                        while input_value == False: #Stops it from picking up mulitple button presses.
+                            input_value = GPIO.input(12)
+                        play_obj.stop()
+                        GPIO.output(11,GPIO.LOW)
+                    time.sleep(0.5)
+
                 play_obj.wait_done()
             else:
                 continue
