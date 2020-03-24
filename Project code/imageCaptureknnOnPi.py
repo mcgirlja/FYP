@@ -6,6 +6,7 @@ import pickle
 import simpleaudio as sa
 import sys
 import RPi.GPIO as GPIO
+import glob
 
 class imageCapture(object):
 
@@ -14,17 +15,10 @@ class imageCapture(object):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(11,GPIO.OUT)
         GPIO.setup(12, GPIO.IN)
+        GPIO.output(11,GPIO.LOW)
         self.matches = [] # used in orb method as a variable to pass matches. len(self.matches) will return how many matches there are.
-        # self.matchedImage = None #only used when using the show() method and drawing the matches for visual matches
-        self.storedImageDes = None
-        self.imagesWithAudio = {
-
-        r'/home/pi/FYP/Image&Audio/HP-ORDER-OF-THE-PHOENIX.jpg': r'temp.wav',
-        r'/home/pi/FYP/Image&Audio/OF-MICE-AND-MEN.jpg': r'temp2.wav',
-        r'/home/pi/FYP/Image&Audio/OLIVER-TWIST.jpg' : r'temp3.wav',
-        r'/home/pi/FYP/Image&Audio/TWILIGHT-BREAKING-DAWN.jpg' : r'temp4.wav',
-        r'/home/pi/FYP/Image&Audio/ROMEO-AND-JULIET.jpg' : r'/home/pi/FYP/Image&Audio/ROMEO-AND-JULIET.wav'
-        }
+        self.storedImageDes = None #image descriptors paired with file path string.
+        self.imagesWithAudio = {}
 
 
     def captureImage(self):
@@ -50,11 +44,10 @@ class imageCapture(object):
             print(image)
             storedImg = cv2.imread(image,0)
             orb = cv2.KAZE_create()
-            #orb = cv2.KAZE_create()
             kp1, des1 = orb.detectAndCompute(capturedImage, None) #this finds keypoints and descriptors with SIFT
-            # BFMatcher with default params
             bf = cv2.BFMatcher()
             matches = bf.knnMatch(des1,des2, k=2)
+
             # Apply the ratio test
             good = []
             for m,n in matches:
@@ -99,6 +92,15 @@ class imageCapture(object):
                     round = 0
                     break
 
+    def populate_dict(self):
+        pathname = '/home/pi/FYP/Image&Audio'
+        globjpg = glob.glob(pathname + '/*.jpg')
+        globwav = glob.glob(pathname + '/*.wav')
+
+        for image in globjpg:
+            for sound in globwav:
+                if(image[:-4] == sound[:-4]):
+                    self.imagesWithAudio[image] = sound #Tie the jpg with the wav in a dict if match found.
 
     def read_Book(self, match):
         print("IMAGE FOUND. IT IS = " + match)
@@ -115,9 +117,9 @@ class imageCapture(object):
                         print('Button has been pressed')
                         while input_value == False: #Stops it from picking up mulitple button presses.
                             input_value = GPIO.input(12)
-                        play_obj.stop()
+                        play_obj.stop() #stops the book if the button has been pressed.
                         GPIO.output(11,GPIO.LOW)
-                    time.sleep(0.5)
+                    time.sleep(0.5)  #small buffer so that the while loop isn't checking constantly which can be intensive on the OS.
 
                 play_obj.wait_done()
             else:
@@ -126,8 +128,6 @@ class imageCapture(object):
 
 
 testobj = imageCapture()
+testobj.populate_dict()
 testobj.unpickle_database()
 testobj.bookLookup()
-#testobj.captureImage()
-#testobj.get_matches_Kaze()
-# testobj.get_Matches_Orb()
